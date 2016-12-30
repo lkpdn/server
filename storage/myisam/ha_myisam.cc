@@ -664,7 +664,8 @@ static int compute_vcols(MI_INFO *info, uchar *record, int keynum)
   TABLE *table= (TABLE*)(info->external_ref);
   table->move_fields(table->field, record, table->field[0]->record_ptr());
   if (keynum == -1) // update all vcols
-    return table->update_virtual_fields(VCOL_UPDATE_INDEXED);
+    return (table->update_virtual_fields(VCOL_UPDATE_FOR_READ) ||
+            table->update_virtual_fields(VCOL_UPDATE_INDEXED));
 
   // update only one key
   KEY *key= table->key_info + keynum;
