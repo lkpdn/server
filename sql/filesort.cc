@@ -761,7 +761,7 @@ static ha_rows find_all_keys(THD *thd, Sort_param *param, SQL_SELECT *select,
   sort_form->read_set= &sort_form->tmp_set;
   register_used_fields(param);
   if (quick_select)
-    select->quick->add_used_key_part_to_set(sort_form->read_set);
+    select->quick->add_used_key_part_to_set();
 
   Item *sort_cond= !select ?  
                      0 : !select->pre_idx_push_select_cond ? 
@@ -1259,7 +1259,6 @@ static void register_used_fields(Sort_param *param)
 {
   reg1 SORT_FIELD *sort_field;
   TABLE *table=param->sort_form;
-  MY_BITMAP *bitmap= table->read_set;
 
   for (sort_field= param->local_sortorder ;
        sort_field != param->end ;
@@ -1269,14 +1268,7 @@ static void register_used_fields(Sort_param *param)
     if ((field= sort_field->field))
     {
       if (field->table == table)
-      {
-        if (field->vcol_info)
-	{
-          Item *vcol_item= field->vcol_info->expr;
-          vcol_item->walk(&Item::register_field_in_read_map, 1, 0);
-        }                   
-        bitmap_set_bit(bitmap, field->field_index);
-      }
+        field->register_field_in_read_map();
     }
     else
     {						// Item
@@ -1289,7 +1281,7 @@ static void register_used_fields(Sort_param *param)
     SORT_ADDON_FIELD *addonf= param->addon_field;
     Field *field;
     for ( ; (field= addonf->field) ; addonf++)
-      bitmap_set_bit(bitmap, field->field_index);
+      field->register_field_in_read_map();
   }
   else
   {

@@ -181,3 +181,25 @@ create table t1 (a int, b double as (rand()));
 --error ER_GENERATED_COLUMN_FUNCTION_IS_NOT_ALLOWED
 alter table t1 add index (b);
 drop table t1;
+
+#
+# MDEV-11598 Assertion `!table || (!table->read_set... failed
+#
+
+CREATE OR REPLACE TABLE t1 (
+    f2 DOUBLE NOT NULL DEFAULT '0',
+    f3 DOUBLE NOT NULL DEFAULT '0',
+    f4 DOUBLE,
+    f5 DOUBLE DEFAULT '0',
+    v4 DOUBLE AS (IF(f4,f3,f2)) VIRTUAL,
+    KEY (f5),
+    KEY (v4)
+);
+
+INSERT INTO t1 (f2,f3,f4,f5) VALUES (5,4,1,0),(5,7,NULL,0);
+INSERT INTO t1 (f2,f3,f4,f5) SELECT f2, f3, f5, f3 FROM t1;
+INSERT INTO t1 (f2,f3,f4,f5) VALUES (5,0,NULL,1);
+INSERT INTO t1 (f2,f3,f4,f5) SELECT f2, f5, f5, f3 FROM t1;
+DELETE FROM t1 WHERE f5 = 1 OR v4 = 4 ORDER BY f5,v4 LIMIT 9;
+SELECT * from t1;
+DROP TABLE t1;
