@@ -11858,7 +11858,16 @@ void QUICK_RANGE_SELECT::add_used_key_part_to_set()
   KEY_PART *part= key_parts;
   for (key_len=0; key_len < max_used_key_length;
        key_len += (part++)->store_length)
-    part->field->register_field_in_read_map();
+  {
+    /*
+      We have to use field_index instead of part->field
+      as for partial fields, part->field points to
+      a temporary field that is only part of the original
+      field.  field_index always points to the original field
+    */
+    Field *field= head->field[part->field->field_index];
+    field->register_field_in_read_map();
+  }
 }
 
 
@@ -11868,7 +11877,16 @@ void QUICK_GROUP_MIN_MAX_SELECT::add_used_key_part_to_set()
   KEY_PART_INFO *part= index_info->key_part;
   for (key_len=0; key_len < max_used_key_length;
        key_len += (part++)->store_length)
-    part->field->register_field_in_read_map();
+  {
+    /*
+      We have to use field_index instead of part->field
+      as for partial fields, part->field points to
+      a temporary field that is only part of the original
+      field.  field_index always points to the original field
+    */
+    Field *field= head->field[part->field->field_index];
+    field->register_field_in_read_map();
+  }
 }
 
 
